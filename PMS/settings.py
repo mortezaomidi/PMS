@@ -79,9 +79,9 @@ WSGI_APPLICATION = 'PMS.wsgi.application'
 DATABASES = {
     'default': {
          'ENGINE': 'django.contrib.gis.db.backends.postgis',
-         'NAME': 'PMS_DB',
+         'NAME': 'PMS_1',
          'USER': 'postgres',
-         'PASSWORD': '123456789', # Note secure style for setting pass!
+         'PASSWORD': '123456789', # Note secure style in production!
          'HOST': 'localhost',
     },
 }
@@ -109,7 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fa'
 
 TIME_ZONE = 'UTC'
 
@@ -124,3 +124,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# custom user model for authentication
+AUTH_USER_MODEL = 'property.EndUser'
