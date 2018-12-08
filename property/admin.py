@@ -1,5 +1,6 @@
 from django.contrib.gis import admin as geoadmin
-from .models import Province, County, Property, EndUser
+from .models import Province, County, Property, PostalCode, EndUser
+from leaflet.admin import LeafletGeoAdmin
 
 
 @geoadmin.register(Property)
@@ -12,6 +13,7 @@ class PropertyAdmin(geoadmin.BingGeoAdmin):
 
 geoadmin.site.register(Province, geoadmin.BingGeoAdmin)
 geoadmin.site.register(County, geoadmin.BingGeoAdmin)
+geoadmin.site.register(PostalCode, geoadmin.BingGeoAdmin)
 geoadmin.site.register(EndUser, geoadmin.BingGeoAdmin)
 
 

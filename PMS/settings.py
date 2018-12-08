@@ -39,7 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Add GIS capabilities in django
     'django.contrib.gis',
+    'rest_framework',
+    'djgeojson',
+    #'rest_framework_gis',
     'property',
+    'leaflet',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -124,6 +129,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR
 
 # custom user model for authentication
 AUTH_USER_MODEL = 'property.EndUser'
+
+LEAFLET_CONFIG = {
+    'DEFAULT_CENTER': (35.747363, 51.375244),
+    'DEFAULT_ZOOM': 13,
+    'MIN_ZOOM': 3,
+    'MAX_ZOOM': 20,
+    'ATTRIBUTION_PREFIX': 'PMS SYSTEM',
+    'SCALE': 'both',
+    'MINIMAP': True,
+    'RESET_VIEW': False
+}
+
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'

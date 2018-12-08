@@ -1,6 +1,9 @@
 from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.auth.models import AbstractUser
 from django.contrib.gis.db import models as geomodel
+from django.contrib.gis.gdal import SpatialReference, CoordTransform
+from django.contrib.gis.geos import GEOSGeometry, Point
+import random
 
 
 # SRID ==> Spatial refrence # IDEA
@@ -44,11 +47,15 @@ class County(geomodel.Model):
         verbose_name = 'َشهرستان'
         verbose_name_plural = 'شهرستان ها'
 
+
 @python_2_unicode_compatible
 class PostalCode(geomodel.Model):
     id = geomodel.AutoField(primary_key=True)
-    postalcode = geomodel.CharField(max_length=5, verbose_name='کدپستی', default="", editable=False)
+    postalcode = geomodel.CharField(max_length=5, verbose_name='کدپستی', default="")
     geom = geomodel.MultiPolygonField('محدوده جغرافیایی', srid=32639, blank=True, null=True)
+
+    def __str__(self):
+        return "واحد مکانی پستی: " + self.postalcode
 
     class Meta:
         verbose_name = 'کد پستی'
@@ -100,12 +107,32 @@ class Property(geomodel.Model):
         (WOOD, 'چوب'),
     )
 
-    user = geomodel.ForeignKey(EndUser, on_delete=geomodel.CASCADE, verbose_name='مشاور')
+    @classmethod
+    def get_random_point(cls, geom):
+        # Return random point in  bounds of a postalcode.
+        desired_srid = SpatialReference(SRID)
+        source_srid = SpatialReference(geom.srid)
+        trans = CoordTransform(source_srid, desired_srid)
+        geom.transform(trans)
+        bounds = geom.extent
+        min_x, min_y, max_x, max_y = bounds
+        # Return a random floating point number N such that ...
+        #... a <= N <= b for a <= b and b <= N <= a for b < a.
+        x = random.uniform(min_x, max_x)
+        y = random.uniform(min_y, max_y)
+        pnt = Point(x,y, srid=SRID)
+
+        return GEOSGeometry(pnt)
+
+    user = geomodel.ForeignKey(EndUser, on_delete=geomodel.CASCADE,
+        verbose_name='مشاور')
     contract_code = geomodel.CharField('کد قرارداد', max_length=8)
     contract_type = geomodel.PositiveSmallIntegerField('نوع قرارداد',
         choices=CT)
-    province = geomodel.ForeignKey( Province, on_delete=geomodel.CASCADE, verbose_name='استان')
-    county = geomodel.ForeignKey(County, on_delete=geomodel.CASCADE, verbose_name='شهرستان')
+    province = geomodel.ForeignKey( Province, on_delete=geomodel.CASCADE,
+        verbose_name='استان')
+    county = geomodel.ForeignKey(County, on_delete=geomodel.CASCADE,
+        verbose_name='شهرستان')
     property_type = geomodel.PositiveSmallIntegerField('نوع ملک',
         choices=PT)
     region = geomodel.PositiveSmallIntegerField('منطقه', blank=True, null=True)
@@ -118,10 +145,13 @@ class Property(geomodel.Model):
     structure_type = geomodel.SmallIntegerField('نوع سازه',
         choices=ST)
     recorded_date = geomodel.DateField('تاریخ ثبت قرارداد') # auto_now=False, auto_now_add=False
-    postal_code = geomodel.CharField('کد پستی', max_length=5)
+    postal_code = geomodel.CharField('کد پستی', max_length=5) #unique=True
 
     # GIS field-specific: a geometry field (MultiPolygonField)
-    geom = geomodel.MultiPolygonField('موقعیت جغرافیایی', srid=SRID, blank=True, null=True)
+    geom = geomodel.PointField('موقعیت جغرافیایی', srid=SRID, blank=True, null=True)
+
+    def get_absolute_url(self):
+        return reverse('property-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return '({}, {}, {})'.format(self.contract_code, self.price, self.postal_code)
@@ -129,3 +159,16 @@ class Property(geomodel.Model):
     class Meta:
         verbose_name = 'ملک'
         verbose_name_plural = 'املاک'
+        ordering = ['-price']
+
+    def save(self, *args, **kwargs):
+        if not self.geom:
+            try:
+                postalcode_geom = PostalCode.objects.get(postalcode=self.postal_code)
+                self.geom = self.get_random_point(postalcode_geom.geom)
+                super(Property, self).save(*args, **kwargs)
+                print('random point added to Property.')
+            except Exception as e:
+                print(e)
+                self.geom = Point(0,0)
+                super(Property, self).save(*args, **kwargs)

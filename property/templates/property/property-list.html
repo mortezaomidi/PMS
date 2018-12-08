@@ -1,0 +1,55 @@
+{% extends 'property/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %} PMS-List {% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{% static "property/LIB/css/bootstrap.min.css" %}">
+  <link rel="stylesheet" href="{% static "property/LIB/css/bootstrap-theme.min.css" %}">
+
+{% endblock %}
+
+{% block content %}
+    <table class="table table-hover" >
+      <thead>
+        <tr>
+          <th> User </th>
+          <th> Postal Code (Click the code) </th>
+          <th> Price </th>
+          <th> Contract Code </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for property in properties %}
+          <tr>
+            <td> {{ property.user  }} </td>
+            <td> <a href="{% url 'property-detail' property.id %}"> {{ property.postal_code }} </a> </td>
+            <td> {{ property.price }} </td>
+            <td> {{ property.contract_code }} </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if is_paginated %}
+        <ul class="pagination">
+        {% if page_obj.has_previous %}
+            <li>
+                <span><a href="?page={{ page_obj.previous_page_number }}">Previous</a></span>
+            </li>
+        {% endif %}
+            <li class="">
+                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span>
+            </li>
+        {% if page_obj.has_next %}
+            <li>
+                <span><a href="?page={{ page_obj.next_page_number }}">Next</a></span>
+            </li>
+        {% endif %}
+        </ul>
+        {% else %}
+
+            <p> There is no data to paginate </p>
+      {% endif %}
+  {% endblock %}

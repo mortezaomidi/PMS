@@ -1,0 +1,91 @@
+{% extends 'property/base.html' %}
+{% load static %}
+{% load leaflet_tags %}
+
+{% block title %} PMS-GIS{% endblock %}
+
+{% block head %}
+  {{block.super}}
+  {{ form.media }}
+  {% leaflet_js plugins="ALL" %}
+  {% leaflet_css plugins="ALL" %}
+  <link rel="stylesheet" href="{% static "property/home.css" %}">
+  <link rel="stylesheet" href="{% static "property/LIB/css/bootstrap.min.css" %}">
+  <link rel="stylesheet" href="{% static "property/LIB/css/jquery-ui.css" %}">
+  <script type="text/javascript" src="{% static "property/LIB/js/jquery-1.12.4.js" %}">  </script>
+  <script type="text/javascript" src="{% static "property/LIB/js/jquery-ui.12.4.js" %}">  </script>
+  <script type="text/javascript" src="{% static "property/LIB/js/bootstrap.min.js" %}"> </script>
+
+
+
+  <!-- <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
+
+
+  <script type="text/javascript">
+        window.addEventListener("map:init", function (e) {
+            var map = e.detail.map;
+            // Download GeoJSON PMSdata with Ajax not good opthin
+            // using geoserver TileWMS we can display big data
+            var geoserverUrl = 'http://localhost:8080/geoserver/pms/wms';
+
+            var overlayMaps = {
+                        wmsLayerProvince : L.tileLayer.wms(geoserverUrl,{
+                                    layers: 'pms:property_province',
+                                    transparent: true,
+                                    format: 'image/png',
+                              }),
+                        wmsLayerCounty : L.tileLayer.wms(geoserverUrl,{
+                                    layers: 'pms:property_county',
+                                    transparent: true,
+                                    format: 'image/png',
+                              }),
+                        wmsLayerPostalcode : L.tileLayer.wms(geoserverUrl,{
+                                    layers: 'pms:property_postalcode',
+                                    transparent: true,
+                                    format: 'image/png'
+                              }),
+                         wmsLayerProperty : L.tileLayer.wms(geoserverUrl, {
+                                    layers: 'pms:property_property',
+                                    // styles: 'style1'
+                                    transparent: true,
+                                    format: 'image/png'
+                            })
+          };
+
+          var OpenStreetMap_HOT = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+          	maxZoom: 19,
+          	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+          });
+          var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+          });
+          var OpenStreetMap_BlackAndWhite = L.tileLayer('http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+          	maxZoom: 18,
+          	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          })
+
+          var baseMaps = {
+              "OSM": OpenStreetMap_HOT,
+              "BW": OpenStreetMap_BlackAndWhite,
+              "ESRI": Esri_WorldImagery
+          };
+
+
+
+
+            L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+        }, false);
+
+  </script>
+
+{% endblock %}
+
+
+{% block content %}
+  {% leaflet_map "pms_map" %}
+  <!-- <select id="styles" onchange="wmsLayerProperty.setParams({styles: this.value});">
+    <option selected="selected"  value="style1">Style 1</option>
+    <option value="style2">Style 2</option>
+</select> -->
+{% endblock %}
